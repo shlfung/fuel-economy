@@ -25,6 +25,7 @@ const fuelData = rawFuelData.map((item) => ({
 export default function FuelSearch() {
   const [searchTerm, setSearchTerm] = useState('');
   const [makeFilter, setMakeFilter] = useState('');
+  const [yearFilter, setYearFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 15;
 
@@ -35,9 +36,10 @@ export default function FuelSearch() {
         item.model.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.make.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesMake = makeFilter === '' || item.make === makeFilter;
-      return matchesSearch && matchesMake;
+      const matchesYear = yearFilter === '' || String(item.model_year) === yearFilter;
+      return matchesSearch && matchesMake && matchesYear;
     });
-  }, [searchTerm, makeFilter]);
+  }, [searchTerm, makeFilter, yearFilter]);
 
   // Pagination logic
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
@@ -49,10 +51,11 @@ export default function FuelSearch() {
   // Reset to first page when filters/search change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, makeFilter]);
+  }, [searchTerm, makeFilter, yearFilter]);
 
-  // Get unique makes for the dropdown
+  // Get unique makes and years for the dropdowns
   const uniqueMakes = Array.from(new Set(fuelData.map(d => d.make))).sort();
+  const uniqueYears = Array.from(new Set(fuelData.map(d => d.model_year))).sort((a, b) => b - a);
 
   return (
     <div className="p-8">
@@ -71,6 +74,15 @@ export default function FuelSearch() {
           <option value="">All Makes</option>
           {uniqueMakes.map(make => (
             <option key={make} value={make}>{make}</option>
+          ))}
+        </select>
+        <select
+          className="border p-2 rounded"
+          onChange={(e) => setYearFilter(e.target.value)}
+        >
+          <option value="">All Years</option>
+          {uniqueYears.map(year => (
+            <option key={year} value={year}>{year}</option>
           ))}
         </select>
       </div>
