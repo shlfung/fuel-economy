@@ -1,7 +1,26 @@
 "use client"
 import { useState, useMemo, useEffect } from 'react';
-import fuelData from '../data/fuel_consumption_data_2026.json';
+import rawFuelData from '../data/fuel_consumption_data_merged.json';
 import VehicleCard from './VehicleCard';
+
+// Normalize keys from merged CSV to match expected format
+const fuelData = rawFuelData.map((item) => ({
+  model_year: Number(item["Model year"]),
+  make: item["Make"],
+  model: item["Model"],
+  vehicle_class: item["Vehicle class"],
+  engine_size_l: Number(item["Engine size (L)"]),
+  cylinders: Number(item["Cylinders"]),
+  transmission: item["Transmission"],
+  fuel_type: item["Fuel type"],
+  city_l_per_100_km: Number(item["City (L/100 km)"]),
+  highway_l_per_100_km: Number(item["Highway (L/100 km)"]),
+  combined_l_per_100_km: Number(item["Combined (L/100 km)"]),
+  combined_mpg: Number(item["Combined (mpg)"]),
+  co2_emissions_g_per_km: Number(item["CO2 emissions (g/km)"]),
+  co2_rating: Number(item["CO2 rating"]),
+  smog_rating: Number(item["Smog rating"]),
+}));
 
 export default function FuelSearch() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -37,7 +56,7 @@ export default function FuelSearch() {
 
   return (
     <div className="p-8">
-      <h1 className="text-2xl font-bold mb-4">2026 Fuel Consumption Search</h1>
+      <h1 className="text-2xl font-bold mb-4">Fuel Consumption Search</h1>
       <div className="flex gap-4 mb-6">
         <input
           type="text"
