@@ -1,6 +1,7 @@
 "use client"
 import { useState, useMemo } from 'react';
-import fuelData from '../data/fuel_consumption_data_2026.json'
+import fuelData from '../data/fuel_consumption_data_2026.json';
+import VehicleCard from './VehicleCard';
 
 export default function FuelSearch() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -47,14 +48,7 @@ export default function FuelSearch() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredData.map((car, idx) => (
-          <div key={idx} className="border p-4 rounded shadow-sm hover:shadow-md transition">
-            <h2 className="font-bold text-lg">{car.make} {car.model}</h2>
-            <p className="text-sm text-gray-600">{car.vehicle_class}</p>
-            <div className="mt-2 text-sm">
-              <p>Combined: <strong>{car.combined_l_per_100_km} L/100 km</strong></p>
-              <p>CO2 Rating: <strong>{car.co2_rating}/10</strong></p>
-            </div>
-          </div>
+          <VehicleCard key={idx} vehicle={car} />
         ))}
       </div>
     </div>
