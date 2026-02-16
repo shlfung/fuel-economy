@@ -30,6 +30,22 @@ export interface FuelSearchProps {
   uniqueYears: number[];
 }
 
+export interface FuelSearchFiltersProps {
+  searchTerm: string;
+  makeFilter: string;
+  yearFilter: string;
+  uniqueMakes: string[];
+  uniqueYears: number[];
+}
+
+export interface FuelSearchPaginationProps {
+  currentPage: number;
+  totalPages: number;
+  searchTerm: string;
+  makeFilter: string;
+  yearFilter: string;
+}
+
 // Props for a single vehicle display card.
 export interface VehicleCardProps {
   vehicle: Vehicle;
