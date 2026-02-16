@@ -1,3 +1,7 @@
+export const metadata = {
+  title: "Vehicle Fuel Economy",
+  description: "Database of vehicle fuel economy data from 1995. Data is from the Government of Canada",
+};
 import { createClient } from '@supabase/supabase-js';
 import Link from 'next/link';
 import { Suspense } from 'react';
