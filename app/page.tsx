@@ -4,6 +4,7 @@ import { Suspense } from 'react';
 import { unstable_cache } from 'next/cache';
 import FuelSearch from '../components/FuelSearch';
 
+// Shared error UI for configuration and Supabase query failures.
 function VehiclesError({ message }: { message: string }) {
   return (
     <div className="rounded border border-red-300 bg-red-50 p-4 text-red-700">
@@ -26,6 +27,8 @@ type SearchParams = {
   year?: string;
 };
 
+// Load and cache all make/year options so filter dropdowns stay complete.
+// This is cached for 24 hours to avoid repeatedly scanning the full table.
 const getFilterOptions = unstable_cache(
   async (supabaseUrl: string, supabaseKey: string) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
@@ -85,6 +88,7 @@ async function VehiclesData({ searchParams }: { searchParams: SearchParams }) {
   const from = (currentPage - 1) * itemsPerPage;
   const to = from + itemsPerPage - 1;
 
+  // Build the filtered query once, then apply range pagination.
   const supabase = createClient(supabaseUrl, supabaseKey);
   let query = supabase
     .from('vehicles')
@@ -135,6 +139,7 @@ export default async function Home({
 }: {
   searchParams?: Promise<SearchParams> | SearchParams;
 }) {
+  // Next.js can provide searchParams as a plain object or a Promise depending on context.
   const resolvedSearchParams = searchParams
     ? await Promise.resolve(searchParams)
     : {};

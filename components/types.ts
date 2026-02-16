@@ -1,3 +1,4 @@
+// Shape of a row returned from the vehicles table.
 export type Vehicle = {
   id?: number;
   model_year: number;
@@ -17,6 +18,7 @@ export type Vehicle = {
   smog_rating: number;
 };
 
+// Props for the searchable/paginated vehicle listing component.
 export interface FuelSearchProps {
   fuelData: Vehicle[];
   currentPage: number;
@@ -28,6 +30,7 @@ export interface FuelSearchProps {
   uniqueYears: number[];
 }
 
+// Props for a single vehicle display card.
 export interface VehicleCardProps {
   vehicle: Vehicle;
 }

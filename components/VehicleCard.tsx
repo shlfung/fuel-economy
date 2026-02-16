@@ -1,5 +1,6 @@
 import type { VehicleCardProps } from './types';
 
+// Presentational card for a single vehicle row from the Supabase result set.
 export default function VehicleCard({ vehicle }: VehicleCardProps) {
   return (
     <div className="border p-4 rounded shadow-sm hover:shadow-md transition">

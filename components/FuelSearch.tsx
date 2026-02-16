@@ -2,10 +2,11 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { FormEvent, useState, useTransition } from 'react';
+import { useState, useTransition } from 'react';
 import type { FuelSearchProps } from './types';
 import VehicleCard from './VehicleCard';
 
+// Client-side controls that update URL params and let the server render filtered data.
 export default function FuelSearch({
   fuelData,
   currentPage,
@@ -22,6 +23,7 @@ export default function FuelSearch({
   const [makeInput, setMakeInput] = useState(makeFilter);
   const [yearInput, setYearInput] = useState(yearFilter);
 
+  // Build canonical URLs for the current filters/page (used by apply + pagination).
   const buildHref = (overrides: { page?: number; q?: string; make?: string; year?: string }) => {
     const params = new URLSearchParams();
 
@@ -39,21 +41,24 @@ export default function FuelSearch({
     return query ? `/?${query}` : '/';
   };
 
+  // Use a transition so route updates feel smooth and keep scroll position.
   const navigate = (href: string) => {
     startTransition(() => {
       router.replace(href, { scroll: false });
     });
   };
 
-  const handleApply = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    navigate(buildHref({ page: 1 }));
-  };
-
   return (
     <div className="p-8">
       <h1 className="text-2xl font-bold mb-4">Fuel Consumption Search</h1>
-      <form onSubmit={handleApply} className="flex gap-4 mb-6">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          // Applying text search always resets to the first page.
+          navigate(buildHref({ page: 1 }));
+        }}
+        className="flex gap-4 mb-6"
+      >
         <input
           type="text"
           placeholder="Search by model or make..."
@@ -67,6 +72,7 @@ export default function FuelSearch({
           onChange={(e) => {
             const nextMake = e.target.value;
             setMakeInput(nextMake);
+            // Filter changes reset pagination to page 1.
             navigate(buildHref({ make: nextMake, page: 1 }));
           }}
         >
@@ -81,6 +87,7 @@ export default function FuelSearch({
           onChange={(e) => {
             const nextYear = e.target.value;
             setYearInput(nextYear);
+            // Filter changes reset pagination to page 1.
             navigate(buildHref({ year: nextYear, page: 1 }));
           }}
         >
