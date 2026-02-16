@@ -126,7 +126,7 @@ async function VehiclesData({ searchParams }: { searchParams: SearchParams }) {
 
   return (
     <FuelSearch
-      fuelData={vehicles}
+      fuelData={vehicles ?? []}
       currentPage={Math.min(currentPage, totalPages)}
       totalPages={totalPages}
       searchTerm={searchTerm}
