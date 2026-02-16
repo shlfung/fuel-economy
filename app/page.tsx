@@ -112,10 +112,12 @@ async function VehiclesData({ searchParams }: { searchParams: SearchParams }) {
     }
   }
 
-  const [{ data: vehicles = [], error, count }, options] = await Promise.all([
+
+  const [{ data, error, count }, options] = await Promise.all([
     query.range(from, to),
     getFilterOptions(supabaseUrl, supabaseKey),
   ]);
+  const vehicles = data ?? [];
 
   if (error) {
     return <VehiclesError message={error.message} />;
