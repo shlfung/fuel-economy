@@ -1,6 +1,5 @@
 "use client";
 
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import type { FuelSearchProps } from './types';
@@ -96,8 +95,19 @@ export default function FuelSearch({
             <option key={year} value={year}>{year}</option>
           ))}
         </select>
-        <button type="submit" className="px-3 py-2 rounded border" disabled={isPending}>Apply</button>
-        <Link href="/" className="px-3 py-2 rounded border">Reset</Link>
+        <button
+          type="button"
+          className="px-3 py-2 rounded border"
+          onClick={() => {
+            setQInput('');
+            setMakeInput('');
+            setYearInput('');
+            navigate('/');
+          }}
+          disabled={isPending}
+        >
+          Reset
+        </button>
       </form>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {fuelData.map((car, idx) => (
