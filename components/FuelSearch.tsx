@@ -1,75 +1,74 @@
-"use client"
-import { useState, useMemo, useEffect } from 'react';
-import rawFuelData from '../data/fuel_consumption_data_merged.json';
+"use client";
+
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { FormEvent, useState, useTransition } from 'react';
+import type { FuelSearchProps } from './types';
 import VehicleCard from './VehicleCard';
 
-// Normalize keys from merged CSV to match expected format
-const fuelData = rawFuelData.map((item) => ({
-  model_year: Number(item["Model year"]),
-  make: item["Make"],
-  model: item["Model"],
-  vehicle_class: item["Vehicle class"],
-  engine_size_l: Number(item["Engine size (L)"]),
-  cylinders: Number(item["Cylinders"]),
-  transmission: item["Transmission"],
-  fuel_type: item["Fuel type"],
-  city_l_per_100_km: Number(item["City (L/100 km)"]),
-  highway_l_per_100_km: Number(item["Highway (L/100 km)"]),
-  combined_l_per_100_km: Number(item["Combined (L/100 km)"]),
-  combined_mpg: Number(item["Combined (mpg)"]),
-  co2_emissions_g_per_km: Number(item["CO2 emissions (g/km)"]),
-  co2_rating: Number(item["CO2 rating"]),
-  smog_rating: Number(item["Smog rating"]),
-}));
+export default function FuelSearch({
+  fuelData,
+  currentPage,
+  totalPages,
+  searchTerm,
+  makeFilter,
+  yearFilter,
+  uniqueMakes,
+  uniqueYears,
+}: FuelSearchProps) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  const [qInput, setQInput] = useState(searchTerm);
+  const [makeInput, setMakeInput] = useState(makeFilter);
+  const [yearInput, setYearInput] = useState(yearFilter);
 
-export default function FuelSearch() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [makeFilter, setMakeFilter] = useState('');
-  const [yearFilter, setYearFilter] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 15;
+  const buildHref = (overrides: { page?: number; q?: string; make?: string; year?: string }) => {
+    const params = new URLSearchParams();
 
-  // Filtering logic
-  const filteredData = useMemo(() => {
-    return fuelData.filter((item) => {
-      const matchesSearch = 
-        item.model.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.make.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesMake = makeFilter === '' || item.make === makeFilter;
-      const matchesYear = yearFilter === '' || String(item.model_year) === yearFilter;
-      return matchesSearch && matchesMake && matchesYear;
+    const nextQ = overrides.q ?? qInput;
+    const nextMake = overrides.make ?? makeInput;
+    const nextYear = overrides.year ?? yearInput;
+    const nextPage = overrides.page ?? currentPage;
+
+    if (nextQ) params.set('q', nextQ);
+    if (nextMake) params.set('make', nextMake);
+    if (nextYear) params.set('year', nextYear);
+    if (nextPage > 1) params.set('page', String(nextPage));
+
+    const query = params.toString();
+    return query ? `/?${query}` : '/';
+  };
+
+  const navigate = (href: string) => {
+    startTransition(() => {
+      router.replace(href, { scroll: false });
     });
-  }, [searchTerm, makeFilter, yearFilter]);
+  };
 
-  // Pagination logic
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-  const paginatedData = filteredData.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
-  // Reset to first page when filters/search change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, makeFilter, yearFilter]);
-
-  // Get unique makes and years for the dropdowns
-  const uniqueMakes = Array.from(new Set(fuelData.map(d => d.make))).sort();
-  const uniqueYears = Array.from(new Set(fuelData.map(d => d.model_year))).sort((a, b) => b - a);
+  const handleApply = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    navigate(buildHref({ page: 1 }));
+  };
 
   return (
     <div className="p-8">
       <h1 className="text-2xl font-bold mb-4">Fuel Consumption Search</h1>
-      <div className="flex gap-4 mb-6">
+      <form onSubmit={handleApply} className="flex gap-4 mb-6">
         <input
           type="text"
           placeholder="Search by model or make..."
           className="border p-2 rounded w-full"
-          onChange={(e) => setSearchTerm(e.target.value)}
+          value={qInput}
+          onChange={(e) => setQInput(e.target.value)}
         />
         <select 
           className="border p-2 rounded"
-          onChange={(e) => setMakeFilter(e.target.value)}
+          value={makeInput}
+          onChange={(e) => {
+            const nextMake = e.target.value;
+            setMakeInput(nextMake);
+            navigate(buildHref({ make: nextMake, page: 1 }));
+          }}
         >
           <option value="">All Makes</option>
           {uniqueMakes.map(make => (
@@ -78,37 +77,54 @@ export default function FuelSearch() {
         </select>
         <select
           className="border p-2 rounded"
-          onChange={(e) => setYearFilter(e.target.value)}
+          value={yearInput}
+          onChange={(e) => {
+            const nextYear = e.target.value;
+            setYearInput(nextYear);
+            navigate(buildHref({ year: nextYear, page: 1 }));
+          }}
         >
           <option value="">All Years</option>
           {uniqueYears.map(year => (
             <option key={year} value={year}>{year}</option>
           ))}
         </select>
-      </div>
+        <button type="submit" className="px-3 py-2 rounded border" disabled={isPending}>Apply</button>
+        <Link href="/" className="px-3 py-2 rounded border">Reset</Link>
+      </form>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {paginatedData.map((car, idx) => (
-          <VehicleCard key={idx} vehicle={car} />
+        {fuelData.map((car, idx) => (
+          <VehicleCard key={car.id ?? idx} vehicle={car} />
         ))}
       </div>
       {/* Pagination Controls */}
       {totalPages > 1 && (
         <div className="flex justify-center items-center gap-2 mt-8">
-          <button
-            className="px-3 py-1 rounded border disabled:opacity-50"
-            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-            disabled={currentPage === 1}
-          >
-            Previous
-          </button>
+          {currentPage === 1 ? (
+            <span className="px-3 py-1 rounded border opacity-50">Previous</span>
+          ) : (
+            <button
+              type="button"
+              className="px-3 py-1 rounded border"
+              onClick={() => navigate(buildHref({ page: currentPage - 1 }))}
+              disabled={isPending}
+            >
+              Previous
+            </button>
+          )}
           <span className="mx-2">Page {currentPage} of {totalPages}</span>
-          <button
-            className="px-3 py-1 rounded border disabled:opacity-50"
-            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-            disabled={currentPage === totalPages}
-          >
-            Next
-          </button>
+          {currentPage === totalPages ? (
+            <span className="px-3 py-1 rounded border opacity-50">Next</span>
+          ) : (
+            <button
+              type="button"
+              className="px-3 py-1 rounded border"
+              onClick={() => navigate(buildHref({ page: currentPage + 1 }))}
+              disabled={isPending}
+            >
+              Next
+            </button>
+          )}
         </div>
       )}
     </div>
