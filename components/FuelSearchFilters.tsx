@@ -15,12 +15,14 @@ export default function FuelSearchFilters({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [qInput, setQInput] = useState(searchTerm);
+  const [makeInput, setMakeInput] = useState(makeFilter);
+  const [yearInput, setYearInput] = useState(yearFilter);
 
   const buildHref = (overrides: { q?: string; make?: string; year?: string; page?: number }) => {
     const params = new URLSearchParams();
     const nextQ = (overrides.q ?? qInput).trim();
-    const nextMake = overrides.make ?? makeFilter;
-    const nextYear = overrides.year ?? yearFilter;
+    const nextMake = overrides.make ?? makeInput;
+    const nextYear = overrides.year ?? yearInput;
     const nextPage = overrides.page ?? 1;
 
     if (nextQ) params.set('q', nextQ);
@@ -48,16 +50,17 @@ export default function FuelSearchFilters({
     >
       <input
         type="text"
-        placeholder="Search by model or make..."
+        placeholder="Search by model..."
         className="border p-2 rounded w-full"
         value={qInput}
         onChange={(e) => setQInput(e.target.value)}
       />
       <select
         className="border p-2 rounded"
-        defaultValue={makeFilter}
+        value={makeInput}
         onChange={(e) => {
           const nextMake = e.target.value;
+          setMakeInput(nextMake);
           navigate(buildHref({ make: nextMake, page: 1 }));
         }}
       >
@@ -70,9 +73,10 @@ export default function FuelSearchFilters({
       </select>
       <select
         className="border p-2 rounded"
-        defaultValue={yearFilter}
+        value={yearInput}
         onChange={(e) => {
           const nextYear = e.target.value;
+          setYearInput(nextYear);
           navigate(buildHref({ year: nextYear, page: 1 }));
         }}
       >
@@ -86,9 +90,10 @@ export default function FuelSearchFilters({
       <button
         type="button"
         className="px-3 py-2 rounded border"
-        onClick={(e) => {
+        onClick={() => {
           setQInput('');
-          e.currentTarget.form?.reset();
+          setMakeInput('');
+          setYearInput('');
           navigate('/');
         }}
         disabled={isPending}

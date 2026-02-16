@@ -18,6 +18,7 @@ export default function FuelSearch({
     <div className="p-8">
       <h1 className="text-2xl font-bold mb-4">Fuel Consumption Search</h1>
       <FuelSearchFilters
+        key={`${searchTerm}|${makeFilter}|${yearFilter}`}
         searchTerm={searchTerm}
         makeFilter={makeFilter}
         yearFilter={yearFilter}

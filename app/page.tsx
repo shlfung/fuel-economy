@@ -96,7 +96,7 @@ async function VehiclesData({ searchParams }: { searchParams: SearchParams }) {
     .order('id', { ascending: true });
 
   if (searchTerm) {
-    query = query.or(`make.ilike.%${searchTerm}%,model.ilike.%${searchTerm}%`);
+    query = query.ilike('model', `%${searchTerm}%`);
   }
   if (makeFilter) {
     query = query.eq('make', makeFilter);
