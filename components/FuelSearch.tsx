@@ -1,3 +1,5 @@
+"use client";
+
 import FuelSearchFilters from './FuelSearchFilters';
 import FuelSearchPagination from './FuelSearchPagination';
 import type { FuelSearchProps } from './types';
