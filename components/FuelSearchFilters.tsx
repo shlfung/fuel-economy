@@ -16,12 +16,15 @@ export default function FuelSearchFilters({
 }: FuelSearchFiltersProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+
+  // Local controlled inputs mirror the current URL state and allow quick edits.
   const [qInput, setQInput] = useState(searchTerm);
   const [makeInput, setMakeInput] = useState(makeFilter);
   const [yearInput, setYearInput] = useState(yearFilter);
   const [sortByInput, setSortByInput] = useState(sortBy);
   const [sortOrderInput, setSortOrderInput] = useState(sortOrder);
 
+  // Build next URL from current inputs plus any overrides, always resetting to page 1.
   const buildHref = (overrides: {
     q?: string;
     make?: string;
@@ -52,6 +55,7 @@ export default function FuelSearchFilters({
   };
 
   const navigate = (href: string) => {
+    // Use a transition so UI stays responsive during route updates.
     startTransition(() => {
       router.replace(href, { scroll: false });
     });
@@ -126,6 +130,7 @@ export default function FuelSearchFilters({
           setSortOrderInput(nextSortOrder as FuelSearchFiltersProps['sortOrder']);
           navigate(buildHref({ sortOrder: nextSortOrder, page: 1 }));
         }}
+        // Sort direction only applies when a sort metric is selected.
         disabled={!sortByInput}
       >
         <option value="asc">Ascending</option>
@@ -135,6 +140,7 @@ export default function FuelSearchFilters({
         type="button"
         className="px-3 py-2 rounded border"
         onClick={() => {
+          // Reset all local controls and return to the base route.
           setQInput('');
           setMakeInput('');
           setYearInput('');

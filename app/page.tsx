@@ -1,13 +1,14 @@
-export const metadata = {
-  title: "Vehicle Fuel Economy",
-  description: "Database of vehicle fuel economy data from 1995. Data is from the Government of Canada",
-};
 import { createClient } from '@supabase/supabase-js';
 import Link from 'next/link';
 import { Suspense } from 'react';
 import { unstable_cache } from 'next/cache';
 import FuelSearch from '../components/FuelSearch';
-import type { SortBy, SortOrder } from '../components/types';
+import type { ParsedSearchParams, SearchParams, SortBy, SortOrder } from '../components/types';
+
+export const metadata = {
+  title: "Vehicle Fuel Economy",
+  description: "Database of vehicle fuel economy data from 1995. Data is from the Government of Canada",
+};
 
 // Shared error UI for configuration and Supabase query failures.
 function VehiclesError({ message }: { message: string }) {
@@ -25,14 +26,40 @@ function VehiclesError({ message }: { message: string }) {
   );
 }
 
-type SearchParams = {
-  page?: string;
-  q?: string;
-  make?: string;
-  year?: string;
-  sortBy?: string;
-  sortOrder?: string;
+// Results displayed per page in the card grid.
+const ITEMS_PER_PAGE = 15;
+
+// Maps user-facing sort keys to concrete database columns.
+const SORT_COLUMN_BY_SELECTION: Record<Exclude<SortBy, ''>, string> = {
+  city: 'city_l_per_100km',
+  highway: 'highway_l_per_100km',
+  combined: 'combined_l_per_100km',
 };
+
+// Converts raw URL search params into normalized values used by queries.
+function parseSearchParams(searchParams: SearchParams): ParsedSearchParams {
+  const currentPage = Math.max(1, Number(searchParams.page) || 1);
+  const searchTerm = (searchParams.q ?? '').trim();
+  const makeFilter = (searchParams.make ?? '').trim();
+  const yearFilter = (searchParams.year ?? '').trim();
+  const sortByRaw = (searchParams.sortBy ?? '').trim();
+  const sortOrderRaw = (searchParams.sortOrder ?? 'asc').trim();
+
+  const sortBy: SortBy =
+    sortByRaw === 'city' || sortByRaw === 'highway' || sortByRaw === 'combined'
+      ? sortByRaw
+      : '';
+  const sortOrder: SortOrder = sortOrderRaw === 'desc' ? 'desc' : 'asc';
+
+  return {
+    currentPage,
+    searchTerm,
+    makeFilter,
+    yearFilter,
+    sortBy,
+    sortOrder,
+  };
+}
 
 // Load and cache all make/year options so filter dropdowns stay complete.
 // This is cached for 24 hours to avoid repeatedly scanning the full table.
@@ -87,32 +114,17 @@ async function VehiclesData({ searchParams }: { searchParams: SearchParams }) {
     );
   }
 
-  const currentPage = Math.max(1, Number(searchParams.page) || 1);
-  const searchTerm = (searchParams.q ?? '').trim();
-  const makeFilter = (searchParams.make ?? '').trim();
-  const yearFilter = (searchParams.year ?? '').trim();
-  const sortByRaw = (searchParams.sortBy ?? '').trim();
-  const sortOrderRaw = (searchParams.sortOrder ?? 'asc').trim();
-  const sortBy: SortBy =
-    sortByRaw === 'city' || sortByRaw === 'highway' || sortByRaw === 'combined'
-      ? sortByRaw
-      : '';
-  const sortOrder: SortOrder = sortOrderRaw === 'desc' ? 'desc' : 'asc';
-  const itemsPerPage = 15;
-  const from = (currentPage - 1) * itemsPerPage;
-  const to = from + itemsPerPage - 1;
+  // Parse and validate all URL filters/sort options once at the top.
+  const { currentPage, searchTerm, makeFilter, yearFilter, sortBy, sortOrder } = parseSearchParams(searchParams);
+  const from = (currentPage - 1) * ITEMS_PER_PAGE;
+  const to = from + ITEMS_PER_PAGE - 1;
 
-  // Build the filtered query once, then apply range pagination.
+  // Build a single query: apply sort + filters, then paginate with range().
   const supabase = createClient(supabaseUrl, supabaseKey);
   let query = supabase.from('vehicles').select('*', { count: 'exact' });
 
-  const sortColumnBySelection: Record<Exclude<SortBy, ''>, string> = {
-    city: 'city_l_per_100km',
-    highway: 'highway_l_per_100km',
-    combined: 'combined_l_per_100km',
-  };
-
-  const selectedSortColumn = sortBy ? sortColumnBySelection[sortBy] : null;
+  // Sorting is optional; id is always used as a deterministic tie-breaker.
+  const selectedSortColumn = sortBy ? SORT_COLUMN_BY_SELECTION[sortBy] : null;
   if (selectedSortColumn) {
     query = query
       .order(selectedSortColumn, { ascending: sortOrder === 'asc' })
@@ -121,6 +133,7 @@ async function VehiclesData({ searchParams }: { searchParams: SearchParams }) {
     query = query.order('id', { ascending: true });
   }
 
+  // Apply user-selected filters only when values are present.
   if (searchTerm) {
     query = query.ilike('model', `%${searchTerm}%`);
   }
@@ -134,7 +147,7 @@ async function VehiclesData({ searchParams }: { searchParams: SearchParams }) {
     }
   }
 
-
+  // Fetch page rows and complete filter dropdown options in parallel.
   const [{ data, error, count }, options] = await Promise.all([
     query.range(from, to),
     getFilterOptions(supabaseUrl, supabaseKey),
@@ -146,8 +159,9 @@ async function VehiclesData({ searchParams }: { searchParams: SearchParams }) {
   }
 
   const totalCount = count ?? 0;
-  const totalPages = Math.max(1, Math.ceil(totalCount / itemsPerPage));
+  const totalPages = Math.max(1, Math.ceil(totalCount / ITEMS_PER_PAGE));
 
+  // Clamp current page to available pages in case filters shrink the dataset.
   return (
     <FuelSearch
       fuelData={vehicles ?? []}

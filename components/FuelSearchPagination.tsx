@@ -17,10 +17,12 @@ export default function FuelSearchPagination({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
+  // Hide controls when everything fits on one page.
   if (totalPages <= 1) {
     return null;
   }
 
+  // Keep current search/filter/sort state while changing only the page value.
   const buildHref = (page: number) => {
     const params = new URLSearchParams();
 
@@ -38,6 +40,7 @@ export default function FuelSearchPagination({
   };
 
   const navigate = (href: string) => {
+    // Route transition avoids blocking UI during server re-fetch.
     startTransition(() => {
       router.replace(href, { scroll: false });
     });

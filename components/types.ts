@@ -21,6 +21,26 @@ export type Vehicle = {
 export type SortBy = '' | 'city' | 'highway' | 'combined';
 export type SortOrder = 'asc' | 'desc';
 
+// URL query parameters accepted by the vehicles page.
+export type SearchParams = {
+  page?: string;
+  q?: string;
+  make?: string;
+  year?: string;
+  sortBy?: string;
+  sortOrder?: string;
+};
+
+// Normalized and validated query values used in server-side data fetching.
+export type ParsedSearchParams = {
+  currentPage: number;
+  searchTerm: string;
+  makeFilter: string;
+  yearFilter: string;
+  sortBy: SortBy;
+  sortOrder: SortOrder;
+};
+
 // Props for the searchable/paginated vehicle listing component.
 export interface FuelSearchProps {
   fuelData: Vehicle[];
