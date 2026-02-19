@@ -11,6 +11,8 @@ export default function FuelSearchPagination({
   searchTerm,
   makeFilter,
   yearFilter,
+  sortBy,
+  sortOrder,
 }: FuelSearchPaginationProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -25,6 +27,10 @@ export default function FuelSearchPagination({
     if (searchTerm) params.set('q', searchTerm);
     if (makeFilter) params.set('make', makeFilter);
     if (yearFilter) params.set('year', yearFilter);
+    if (sortBy) {
+      params.set('sortBy', sortBy);
+      params.set('sortOrder', sortOrder);
+    }
     if (page > 1) params.set('page', String(page));
 
     const query = params.toString();

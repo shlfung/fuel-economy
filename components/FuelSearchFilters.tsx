@@ -9,6 +9,8 @@ export default function FuelSearchFilters({
   searchTerm,
   makeFilter,
   yearFilter,
+  sortBy,
+  sortOrder,
   uniqueMakes,
   uniqueYears,
 }: FuelSearchFiltersProps) {
@@ -17,17 +19,32 @@ export default function FuelSearchFilters({
   const [qInput, setQInput] = useState(searchTerm);
   const [makeInput, setMakeInput] = useState(makeFilter);
   const [yearInput, setYearInput] = useState(yearFilter);
+  const [sortByInput, setSortByInput] = useState(sortBy);
+  const [sortOrderInput, setSortOrderInput] = useState(sortOrder);
 
-  const buildHref = (overrides: { q?: string; make?: string; year?: string; page?: number }) => {
+  const buildHref = (overrides: {
+    q?: string;
+    make?: string;
+    year?: string;
+    sortBy?: string;
+    sortOrder?: string;
+    page?: number;
+  }) => {
     const params = new URLSearchParams();
     const nextQ = (overrides.q ?? qInput).trim();
     const nextMake = overrides.make ?? makeInput;
     const nextYear = overrides.year ?? yearInput;
+    const nextSortBy = overrides.sortBy ?? sortByInput;
+    const nextSortOrder = overrides.sortOrder ?? sortOrderInput;
     const nextPage = overrides.page ?? 1;
 
     if (nextQ) params.set('q', nextQ);
     if (nextMake) params.set('make', nextMake);
     if (nextYear) params.set('year', nextYear);
+    if (nextSortBy) {
+      params.set('sortBy', nextSortBy);
+      params.set('sortOrder', nextSortOrder);
+    }
     if (nextPage > 1) params.set('page', String(nextPage));
 
     const query = params.toString();
@@ -87,6 +104,33 @@ export default function FuelSearchFilters({
           </option>
         ))}
       </select>
+      <select
+        className="border p-2 rounded"
+        value={sortByInput}
+        onChange={(e) => {
+          const nextSortBy = e.target.value;
+          setSortByInput(nextSortBy as FuelSearchFiltersProps['sortBy']);
+          navigate(buildHref({ sortBy: nextSortBy, page: 1 }));
+        }}
+      >
+        <option value="">Sort by</option>
+        <option value="city">City</option>
+        <option value="highway">Highway</option>
+        <option value="combined">Combined</option>
+      </select>
+      <select
+        className="border p-2 rounded"
+        value={sortOrderInput}
+        onChange={(e) => {
+          const nextSortOrder = e.target.value;
+          setSortOrderInput(nextSortOrder as FuelSearchFiltersProps['sortOrder']);
+          navigate(buildHref({ sortOrder: nextSortOrder, page: 1 }));
+        }}
+        disabled={!sortByInput}
+      >
+        <option value="asc">Ascending</option>
+        <option value="desc">Descending</option>
+      </select>
       <button
         type="button"
         className="px-3 py-2 rounded border"
@@ -94,6 +138,8 @@ export default function FuelSearchFilters({
           setQInput('');
           setMakeInput('');
           setYearInput('');
+          setSortByInput('');
+          setSortOrderInput('asc');
           navigate('/');
         }}
         disabled={isPending}

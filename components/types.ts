@@ -18,6 +18,9 @@ export type Vehicle = {
   smog_rating: number;
 };
 
+export type SortBy = '' | 'city' | 'highway' | 'combined';
+export type SortOrder = 'asc' | 'desc';
+
 // Props for the searchable/paginated vehicle listing component.
 export interface FuelSearchProps {
   fuelData: Vehicle[];
@@ -26,6 +29,8 @@ export interface FuelSearchProps {
   searchTerm: string;
   makeFilter: string;
   yearFilter: string;
+  sortBy: SortBy;
+  sortOrder: SortOrder;
   uniqueMakes: string[];
   uniqueYears: number[];
 }
@@ -34,6 +39,8 @@ export interface FuelSearchFiltersProps {
   searchTerm: string;
   makeFilter: string;
   yearFilter: string;
+  sortBy: SortBy;
+  sortOrder: SortOrder;
   uniqueMakes: string[];
   uniqueYears: number[];
 }
@@ -44,6 +51,8 @@ export interface FuelSearchPaginationProps {
   searchTerm: string;
   makeFilter: string;
   yearFilter: string;
+  sortBy: SortBy;
+  sortOrder: SortOrder;
 }
 
 // Props for a single vehicle display card.

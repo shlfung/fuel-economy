@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { Suspense } from 'react';
 import { unstable_cache } from 'next/cache';
 import FuelSearch from '../components/FuelSearch';
+import type { SortBy, SortOrder } from '../components/types';
 
 // Shared error UI for configuration and Supabase query failures.
 function VehiclesError({ message }: { message: string }) {
@@ -29,6 +30,8 @@ type SearchParams = {
   q?: string;
   make?: string;
   year?: string;
+  sortBy?: string;
+  sortOrder?: string;
 };
 
 // Load and cache all make/year options so filter dropdowns stay complete.
@@ -88,16 +91,35 @@ async function VehiclesData({ searchParams }: { searchParams: SearchParams }) {
   const searchTerm = (searchParams.q ?? '').trim();
   const makeFilter = (searchParams.make ?? '').trim();
   const yearFilter = (searchParams.year ?? '').trim();
+  const sortByRaw = (searchParams.sortBy ?? '').trim();
+  const sortOrderRaw = (searchParams.sortOrder ?? 'asc').trim();
+  const sortBy: SortBy =
+    sortByRaw === 'city' || sortByRaw === 'highway' || sortByRaw === 'combined'
+      ? sortByRaw
+      : '';
+  const sortOrder: SortOrder = sortOrderRaw === 'desc' ? 'desc' : 'asc';
   const itemsPerPage = 15;
   const from = (currentPage - 1) * itemsPerPage;
   const to = from + itemsPerPage - 1;
 
   // Build the filtered query once, then apply range pagination.
   const supabase = createClient(supabaseUrl, supabaseKey);
-  let query = supabase
-    .from('vehicles')
-    .select('*', { count: 'exact' })
-    .order('id', { ascending: true });
+  let query = supabase.from('vehicles').select('*', { count: 'exact' });
+
+  const sortColumnBySelection: Record<Exclude<SortBy, ''>, string> = {
+    city: 'city_l_per_100km',
+    highway: 'highway_l_per_100km',
+    combined: 'combined_l_per_100km',
+  };
+
+  const selectedSortColumn = sortBy ? sortColumnBySelection[sortBy] : null;
+  if (selectedSortColumn) {
+    query = query
+      .order(selectedSortColumn, { ascending: sortOrder === 'asc' })
+      .order('id', { ascending: true });
+  } else {
+    query = query.order('id', { ascending: true });
+  }
 
   if (searchTerm) {
     query = query.ilike('model', `%${searchTerm}%`);
@@ -134,6 +156,8 @@ async function VehiclesData({ searchParams }: { searchParams: SearchParams }) {
       searchTerm={searchTerm}
       makeFilter={makeFilter}
       yearFilter={yearFilter}
+      sortBy={sortBy}
+      sortOrder={sortOrder}
       uniqueMakes={options.uniqueMakes}
       uniqueYears={options.uniqueYears}
     />

@@ -11,6 +11,8 @@ export default function FuelSearch({
   searchTerm,
   makeFilter,
   yearFilter,
+  sortBy,
+  sortOrder,
   uniqueMakes,
   uniqueYears,
 }: FuelSearchProps) {
@@ -18,10 +20,12 @@ export default function FuelSearch({
     <div className="p-8">
       <h1 className="text-2xl font-bold mb-4">Fuel Consumption Search</h1>
       <FuelSearchFilters
-        key={`${searchTerm}|${makeFilter}|${yearFilter}`}
+        key={`${searchTerm}|${makeFilter}|${yearFilter}|${sortBy}|${sortOrder}`}
         searchTerm={searchTerm}
         makeFilter={makeFilter}
         yearFilter={yearFilter}
+        sortBy={sortBy}
+        sortOrder={sortOrder}
         uniqueMakes={uniqueMakes}
         uniqueYears={uniqueYears}
       />
@@ -36,6 +40,8 @@ export default function FuelSearch({
         searchTerm={searchTerm}
         makeFilter={makeFilter}
         yearFilter={yearFilter}
+        sortBy={sortBy}
+        sortOrder={sortOrder}
       />
     </div>
   );
